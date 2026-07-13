@@ -2,6 +2,10 @@
   "required": true,
   "package": "io.github.halfdrop.nohat.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["PlayerEntityRendererMixin"],
+  "client": [
+    "ArmorFeatureRendererMixin",
+    "HeadFeatureRendererMixin",
+    "PlayerEntityRendererMixin"
+  ],
   "injectors": {"defaultRequire": 1}
 }

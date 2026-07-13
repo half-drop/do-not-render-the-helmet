@@ -21,7 +21,9 @@ abstract class AvatarRendererMixin {
     ) {
         if (NoHatClient.isHelmetRenderingDisabled()) {
             state.headEquipment = ItemStack.EMPTY;
+            state.headItem.clear();
+            state.wornHeadType = null;
+            state.wornHeadProfile = null;
         }
     }
 }
-

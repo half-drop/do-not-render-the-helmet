@@ -21,7 +21,9 @@ abstract class PlayerEntityRendererMixin {
     ) {
         if (NoHatClient.isHelmetRenderingDisabled()) {
             state.equippedHeadStack = ItemStack.EMPTY;
+            state.headItemRenderState.clear();
+            state.wearingSkullType = null;
+            state.wearingSkullProfile = null;
         }
     }
 }
-
