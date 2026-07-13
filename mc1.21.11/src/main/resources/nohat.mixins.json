@@ -5,6 +5,7 @@
   "client": [
     "ArmorFeatureRendererMixin",
     "HeadFeatureRendererMixin",
+    "PlayerEntityRenderStateMixin",
     "PlayerEntityRendererMixin"
   ],
   "injectors": {"defaultRequire": 1}

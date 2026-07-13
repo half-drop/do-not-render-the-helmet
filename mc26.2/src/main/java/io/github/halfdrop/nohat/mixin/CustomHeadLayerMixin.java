@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.halfdrop.nohat.NoHatClient;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
-import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,9 +26,10 @@ abstract class CustomHeadLayerMixin {
             float limbDistance,
             CallbackInfo ci
     ) {
-        if (NoHatClient.isHelmetRenderingDisabled() && state instanceof AvatarRenderState) {
+        if (NoHatClient.isHelmetRenderingDisabled()
+                && state instanceof AvatarRenderStateExtension extension
+                && extension.nohat$isActualPlayer()) {
             ci.cancel();
         }
     }
 }
-

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.halfdrop.nohat.NoHatClient;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
-import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -27,9 +26,9 @@ abstract class HumanoidArmorLayerMixin {
     ) {
         if (NoHatClient.isHelmetRenderingDisabled()
                 && slot == EquipmentSlot.HEAD
-                && state instanceof AvatarRenderState) {
+                && state instanceof AvatarRenderStateExtension extension
+                && extension.nohat$isActualPlayer()) {
             ci.cancel();
         }
     }
 }
-

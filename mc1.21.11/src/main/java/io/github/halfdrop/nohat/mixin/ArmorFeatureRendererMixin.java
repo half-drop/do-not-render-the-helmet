@@ -4,7 +4,6 @@ import io.github.halfdrop.nohat.NoHatClient;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.state.BipedEntityRenderState;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
@@ -27,9 +26,9 @@ abstract class ArmorFeatureRendererMixin {
     ) {
         if (NoHatClient.isHelmetRenderingDisabled()
                 && slot == EquipmentSlot.HEAD
-                && state instanceof PlayerEntityRenderState) {
+                && state instanceof PlayerRenderStateExtension extension
+                && extension.nohat$isActualPlayer()) {
             ci.cancel();
         }
     }
 }
-

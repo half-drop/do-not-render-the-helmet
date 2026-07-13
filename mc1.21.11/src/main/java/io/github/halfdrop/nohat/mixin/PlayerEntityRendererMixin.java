@@ -4,6 +4,7 @@ import io.github.halfdrop.nohat.NoHatClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.entity.PlayerLikeEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +20,10 @@ abstract class PlayerEntityRendererMixin {
             float tickDelta,
             CallbackInfo ci
     ) {
-        if (NoHatClient.isHelmetRenderingDisabled()) {
+        boolean actualPlayer = player instanceof PlayerEntity;
+        ((PlayerRenderStateExtension) state).nohat$setActualPlayer(actualPlayer);
+
+        if (actualPlayer && NoHatClient.isHelmetRenderingDisabled()) {
             state.equippedHeadStack = ItemStack.EMPTY;
             state.headItemRenderState.clear();
             state.wearingSkullType = null;
