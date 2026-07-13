@@ -1,4 +1,4 @@
-package io.github.halfdrop.nohat.mixin;
+package io.github.halfdrop.nohat.render;
 
 public interface PlayerRenderStateExtension {
     boolean nohat$isActualPlayer();

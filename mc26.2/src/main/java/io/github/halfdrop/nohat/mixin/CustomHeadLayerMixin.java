@@ -2,6 +2,7 @@ package io.github.halfdrop.nohat.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.halfdrop.nohat.NoHatClient;
+import io.github.halfdrop.nohat.render.AvatarRenderStateExtension;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;

@@ -1,5 +1,6 @@
 package io.github.halfdrop.nohat.mixin;
 
+import io.github.halfdrop.nohat.render.AvatarRenderStateExtension;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,4 +20,3 @@ abstract class AvatarRenderStateMixin implements AvatarRenderStateExtension {
         nohat$actualPlayer = actualPlayer;
     }
 }
-

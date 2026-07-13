@@ -1,6 +1,7 @@
 package io.github.halfdrop.nohat.mixin;
 
 import io.github.halfdrop.nohat.NoHatClient;
+import io.github.halfdrop.nohat.render.PlayerRenderStateExtension;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.state.BipedEntityRenderState;

@@ -1,6 +1,7 @@
 package io.github.halfdrop.nohat.mixin;
 
 import io.github.halfdrop.nohat.NoHatClient;
+import io.github.halfdrop.nohat.render.PlayerRenderStateExtension;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.entity.PlayerLikeEntity;

@@ -1,6 +1,7 @@
 package io.github.halfdrop.nohat.mixin;
 
 import io.github.halfdrop.nohat.NoHatClient;
+import io.github.halfdrop.nohat.render.AvatarRenderStateExtension;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.world.entity.Avatar;
