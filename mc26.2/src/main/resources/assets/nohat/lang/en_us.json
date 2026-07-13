@@ -1,7 +1,6 @@
 {
-  "category.nohat.general": "Do Not Render the Helmet",
-  "key.nohat.toggle": "Disable Helmet Rendering",
-  "message.nohat.disabled": "Helmet rendering disabled",
-  "message.nohat.enabled": "Helmet rendering enabled"
+  "key.category.nohat.general": "Do Not Render the Helmet",
+  "key.nohat.toggle": "Disable Head Slot Rendering",
+  "message.nohat.disabled": "Head slot rendering disabled",
+  "message.nohat.enabled": "Head slot rendering enabled"
 }
-

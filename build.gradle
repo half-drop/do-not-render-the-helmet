@@ -5,5 +5,5 @@ plugins {
 
 allprojects {
     group = 'io.github.half-drop'
-    version = providers.gradleProperty('mod_version').getOrElse('1.0.0')
+    version = providers.gradleProperty('mod_version').getOrElse('1.0.1')
 }

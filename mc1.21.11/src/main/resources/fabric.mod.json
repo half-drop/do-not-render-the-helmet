@@ -3,9 +3,14 @@
   "id": "nohat",
   "version": "${version}",
   "name": "Do Not Render the Helmet",
-  "description": "Hides helmets on every player, including you, without changing equipment or protection. Helmet rendering is hidden by default. Assign ‘Disable Helmet Rendering’ in Controls > Key Binds to toggle it in game.",
+  "description": "隐藏所有玩家（包括自己）头盔栏中任何物品的模型，不改变装备与属性。默认禁用头盔栏物品渲染，可在按键绑定中设置快捷键切换。\n\nHides any item equipped in every player's head slot, including your own, without changing equipment or attributes. Head-slot rendering is disabled by default; assign its key binding to toggle it in game.",
   "authors": ["half_drop"],
   "license": "MIT",
+  "contact": {
+    "homepage": "https://github.com/half-drop/do-not-render-the-helmet",
+    "sources": "https://github.com/half-drop/do-not-render-the-helmet",
+    "issues": "https://github.com/half-drop/do-not-render-the-helmet/issues"
+  },
   "icon": "assets/nohat/icon.png",
   "environment": "client",
   "entrypoints": {
@@ -19,4 +24,3 @@
     "java": ">=21"
   }
 }
-
