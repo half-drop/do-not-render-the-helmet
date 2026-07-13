@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "nohat",
+  "version": "${version}",
+  "name": "Do Not Render the Helmet",
+  "description": "Hides helmets on every player, including you, without changing equipment or protection. Helmet rendering is hidden by default. Assign ‘Disable Helmet Rendering’ in Controls > Key Binds to toggle it in game.",
+  "authors": ["half_drop"],
+  "license": "MIT",
+  "icon": "assets/nohat/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["io.github.halfdrop.nohat.NoHatClient"]
+  },
+  "mixins": ["nohat.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "26.2",
+    "fabric-api": "*",
+    "java": ">=25"
+  }
+}
+

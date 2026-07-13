@@ -1,0 +1,7 @@
+{
+  "category.nohat.general": "不渲染头盔",
+  "key.nohat.toggle": "禁用头盔渲染",
+  "message.nohat.disabled": "已禁用头盔渲染",
+  "message.nohat.enabled": "已启用头盔渲染"
+}
+

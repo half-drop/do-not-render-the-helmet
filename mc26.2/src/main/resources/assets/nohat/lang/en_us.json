@@ -1,0 +1,7 @@
+{
+  "category.nohat.general": "Do Not Render the Helmet",
+  "key.nohat.toggle": "Disable Helmet Rendering",
+  "message.nohat.disabled": "Helmet rendering disabled",
+  "message.nohat.enabled": "Helmet rendering enabled"
+}
+

@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "io.github.halfdrop.nohat.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["ArmorFeatureRendererMixin"],
+  "injectors": {"defaultRequire": 1}
+}
+
