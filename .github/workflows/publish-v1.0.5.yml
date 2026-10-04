@@ -30,10 +30,11 @@ jobs:
           import os
           import struct
           import subprocess
+          import time
           import zipfile
           from pathlib import Path
           
-          config = json.loads(r'''{"key":"nohat","repo":"half-drop/do-not-render-the-helmet","folder":"do-not-render-the-helmet","branch":"release/publish-v1.0.5","tag":"v1.0.5","version":"1.0.5","title":"Do Not Render the Helmet 1.0.5 — Minecraft 26.3","sha":"f696586faf0a7e5117b688846da3badf3f2c01bd","run":37210801796,"id":"nohat","prefix":"do-not-render-the-helmet","notes":"## 更新内容\n\n- 新增 Minecraft 26.3 支持，并保留 26.2、1.21.11 的独立安装包。\n- 适配 26.3 的按键输入接口，并明确头部盔甲渲染注入的方法签名。\n- 修复构建时资源展开导致的 JSON 转义问题。\n- 为构建与发布增加安装包结构校验。\n\n## 安装与使用\n\n这是 Fabric 客户端模组。安装 Fabric Loader 和对应游戏版本的 Fabric API，将下方对应 Minecraft 版本的一个 JAR 放入 mods 文件夹。\n\n默认隐藏玩家头部装备的外观，装备属性保持正常；可在按键设置中绑定切换键。快捷键默认未绑定。\n\n| Minecraft | Java | Fabric Loader | Fabric API |\n| --- | --- | --- | --- |\n| 26.3 | 25 | 0.19.5+ | 0.161.0+26.3 |\n| 26.2 | 25 | 0.19.3+ | 0.154.2+26.2 |\n| 1.21.11 | 21 | 0.19.3+ | 0.141.4+1.21.11 |\n\n## 验证\n\n三个安装包均来自提交 f696586faf0a7e5117b688846da3badf3f2c01bd 的成功 CI 构建，并核验 JSON、版本声明、入口和 Mixin 类、字节码及 SHA-256。26.3 另完成了 Fabric/Knot 类转换检查。\n","artifacts":[{"id":11306342500,"name":"mod-jars","digest":"sha256:18bd5790a96dad5bb53dd0d7e4564e7467045c0f2903fda6db967067735a32d2"}]}''')
+          config = json.loads(r'''{"key":"nohat","repo":"half-drop/do-not-render-the-helmet","folder":"do-not-render-the-helmet","branch":"release/publish-v1.0.5","tag":"v1.0.5","version":"1.0.5","title":"Do Not Render the Helmet 1.0.5 — Minecraft 26.3","sha":"f696586faf0a7e5117b688846da3badf3f2c01bd","run":37210801796,"id":"nohat","prefix":"do-not-render-the-helmet","notes":"## 更新内容\n\n- 新增 Minecraft 26.3 支持，并保留 26.2、1.21.11 的独立安装包。\n- 适配 26.3 的按键输入接口，并明确头部盔甲渲染注入的方法签名。\n- 修复构建时资源展开导致的 JSON 转义问题。\n- 为构建与发布增加安装包结构校验。\n\n## 安装与使用\n\n这是 Fabric 客户端模组。安装 Fabric Loader 和对应游戏版本的 Fabric API，将下方对应 Minecraft 版本的一个 JAR 放入 mods 文件夹。\n\n默认隐藏玩家头部装备的外观，装备属性保持正常；可在按键设置中绑定切换键。快捷键默认未绑定。\n\n| Minecraft | Java | Fabric Loader | Fabric API |\n| --- | --- | --- | --- |\n| 26.3 | 25 | 0.19.5+ | 0.161.0+26.3 |\n| 26.2 | 25 | 0.19.3+ | 0.154.2+26.2 |\n| 1.21.11 | 21 | 0.19.3+ | 0.141.4+1.21.11 |\n\n## 验证\n\n三个安装包均来自提交 f696586faf0a7e5117b688846da3badf3f2c01bd 的成功 CI 构建，并核验 JSON、版本声明、入口和 Mixin 类、字节码及 SHA-256。26.3 另完成了 Fabric/Knot 类转换检查。\n","artifacts":[{"id":11306342500,"name":"mod-jars","digest":"sha256:18bd5790a96dad5bb53dd0d7e4564e7467045c0f2903fda6db967067735a32d2"}],"release_id":403090765}''')
           assert os.environ["GITHUB_REPOSITORY"] == config["repo"], "Unexpected repository"
           repo = config["repo"]
           
@@ -42,10 +43,19 @@ jobs:
               return result.stdout if binary else result.stdout.decode()
           
           def api(endpoint, *args):
-              return json.loads(gh("api", f"repos/{repo}/{endpoint}", *args))
+              return json.loads(gh("api", "-H", "Cache-Control: no-cache", f"repos/{repo}/{endpoint}", *args))
           
           def digest(data):
               return "sha256:" + hashlib.sha256(data).hexdigest()
+          
+          def eventually(read, ready):
+              for delay in (0, 1, 2, 4, 8):
+                  if delay:
+                      time.sleep(delay)
+                  value = read()
+                  if ready(value):
+                      return value
+              raise RuntimeError("GitHub state did not become visible after bounded retries")
           
           run = api(f"actions/runs/{config['run']}")
           assert run["status"] == "completed" and run["conclusion"] == "success", "Build was not successful"
@@ -106,10 +116,8 @@ jobs:
           print(json.dumps({"validated_artifacts": assets}, indent=2))
           
           tag = config["tag"]
-          releases = api("releases?per_page=100")
-          matches = [r for r in releases if r["tag_name"] == tag]
-          assert len(matches) <= 1, "Duplicate releases"
-          release = matches[0] if matches else None
+          release = api(f"releases/{config['release_id']}")
+          assert release["tag_name"] == tag, "Unexpected draft release"
           
           refs = api(f"git/matching-refs/tags/{tag}")
           refs = [r for r in refs if r["ref"] == f"refs/tags/{tag}"]
@@ -129,9 +137,10 @@ jobs:
           notes = Path("release-notes.md")
           notes.write_text(config["notes"], encoding="utf-8")
           if release is None:
-              gh("release", "create", tag, "--repo", repo, "--verify-tag", "--target", config["sha"],
-                 "--draft", "--title", config["title"], "--notes-file", str(notes))
-              release = next(r for r in api("releases?per_page=100") if r["tag_name"] == tag)
+              payload = Path("create-release.json")
+              payload.write_text(json.dumps({"tag_name": tag, "target_commitish": config["sha"],
+                                            "name": config["title"], "body": config["notes"], "draft": True}))
+              release = api("releases", "--method", "POST", "--input", str(payload))
           else:
               assert release["name"] == config["title"] and release["body"].strip() == config["notes"].strip(), "Existing release differs"
           
@@ -142,7 +151,9 @@ jobs:
               assert release["draft"], "Published release is incomplete"
               gh("release", "upload", tag, "--repo", repo, *[str(out / n) for n in missing])
           
-          remote_assets = api(f"releases/{release['id']}/assets?per_page=100")
+          remote_assets = eventually(
+              lambda: api(f"releases/{release['id']}/assets?per_page=100"),
+              lambda found: {a["name"] for a in found} == set(assets) and all(a["state"] == "uploaded" for a in found))
           assert {a["name"] for a in remote_assets} == set(assets)
           for asset in remote_assets:
               expected_asset = assets[asset["name"]]
@@ -153,7 +164,9 @@ jobs:
           
           if release["draft"]:
               gh("release", "edit", tag, "--repo", repo, "--draft=false", "--latest")
-          published = api(f"releases/{release['id']}")
+          published = eventually(
+              lambda: api(f"releases/{release['id']}"),
+              lambda item: not item["draft"] and bool(item["published_at"]))
           assert not published["draft"] and not published["prerelease"] and published["published_at"]
           ref = api(f"git/ref/tags/{tag}")
           assert ref["object"]["type"] == "commit" and ref["object"]["sha"] == config["sha"]
