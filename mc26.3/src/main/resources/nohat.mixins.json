@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "io.github.halfdrop.nohat.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AvatarRendererMixin",
+    "AvatarRenderStateMixin",
+    "CustomHeadLayerMixin",
+    "HumanoidArmorLayerMixin"
+  ],
+  "injectors": {"defaultRequire": 1}
+}

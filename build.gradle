@@ -1,9 +1,9 @@
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version '1.17-SNAPSHOT' apply false
-    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.17.21' apply false
+    id 'net.fabricmc.fabric-loom' version '1.17.21' apply false
 }
 
 allprojects {
     group = 'io.github.half-drop'
-    version = providers.gradleProperty('mod_version').getOrElse('1.0.4')
+    version = providers.gradleProperty('mod_version').getOrElse('1.0.5')
 }

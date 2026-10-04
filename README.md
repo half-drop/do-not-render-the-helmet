@@ -20,16 +20,19 @@ To toggle it while playing, open **Options → Controls → Key Binds**, find **
 
 - Minecraft 1.21.11 with Fabric Loader 0.19.3 or newer, Fabric API, and Java 21+
 - Minecraft 26.2 with Fabric Loader 0.19.3 or newer, Fabric API, and Java 25+
+- Minecraft 26.3 with Fabric Loader 0.19.5 or newer, Fabric API 0.161.0+26.3, and Java 25+
 
 Install the jar whose filename matches your Minecraft version. This mod is client-side only and does not need to be installed on the server.
 
 ## Building
 
+Use JDK 25 to build all supported versions. The Gradle wrapper uses Gradle 9.6.0.
+
 ```text
 ./gradlew build
 ```
 
-The two installable jars are created under `mc1.21.11/build/libs` and `mc26.2/build/libs`.
+The three installable jars are created under `mc1.21.11/build/libs`, `mc26.2/build/libs`, and `mc26.3/build/libs`. Choose the jar without `-sources` in its filename.
 
 ## License
 

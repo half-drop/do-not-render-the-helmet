@@ -1,0 +1,6 @@
+{
+  "key.category.nohat.general": "Do Not Render the Helmet",
+  "key.nohat.toggle": "禁用头盔栏物品渲染",
+  "message.nohat.disabled": "已禁用头盔栏物品渲染",
+  "message.nohat.enabled": "已启用头盔栏物品渲染"
+}

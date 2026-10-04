@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
 permissions:
@@ -18,11 +18,13 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build both Minecraft versions
+      - name: Build all Minecraft versions
         run: ./gradlew build
       - uses: actions/upload-artifact@v4
         with:
           name: mod-jars
           path: |
-            mc1.21.11/build/libs/do-not-render-the-helmet-1.21.11-1.0.4.jar
-            mc26.2/build/libs/do-not-render-the-helmet-26.2-1.0.4.jar
+            mc1.21.11/build/libs/do-not-render-the-helmet-1.21.11-1.0.5.jar
+            mc26.2/build/libs/do-not-render-the-helmet-26.2-1.0.5.jar
+            mc26.3/build/libs/do-not-render-the-helmet-26.3-1.0.5.jar
+          if-no-files-found: error
