@@ -1,0 +1,165 @@
+name: Publish v1.0.5
+
+on:
+  push:
+    branches: ['release/publish-v1.0.5']
+    paths: ['.github/workflows/publish-v1.0.5.yml']
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: publish-v1.0.5
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_PROMPT_DISABLED: '1'
+    steps:
+      - name: Verify and publish successful CI artifacts
+        shell: python
+        run: |
+          import hashlib
+          import io
+          import json
+          import os
+          import struct
+          import subprocess
+          import zipfile
+          from pathlib import Path
+          
+          config = json.loads(r'''{"key":"nohat","repo":"half-drop/do-not-render-the-helmet","folder":"do-not-render-the-helmet","branch":"release/publish-v1.0.5","tag":"v1.0.5","version":"1.0.5","title":"Do Not Render the Helmet 1.0.5 — Minecraft 26.3","sha":"f696586faf0a7e5117b688846da3badf3f2c01bd","run":37210801796,"id":"nohat","prefix":"do-not-render-the-helmet","notes":"## 更新内容\n\n- 新增 Minecraft 26.3 支持，并保留 26.2、1.21.11 的独立安装包。\n- 适配 26.3 的按键输入接口，并明确头部盔甲渲染注入的方法签名。\n- 修复构建时资源展开导致的 JSON 转义问题。\n- 为构建与发布增加安装包结构校验。\n\n## 安装与使用\n\n这是 Fabric 客户端模组。安装 Fabric Loader 和对应游戏版本的 Fabric API，将下方对应 Minecraft 版本的一个 JAR 放入 mods 文件夹。\n\n默认隐藏玩家头部装备的外观，装备属性保持正常；可在按键设置中绑定切换键。快捷键默认未绑定。\n\n| Minecraft | Java | Fabric Loader | Fabric API |\n| --- | --- | --- | --- |\n| 26.3 | 25 | 0.19.5+ | 0.161.0+26.3 |\n| 26.2 | 25 | 0.19.3+ | 0.154.2+26.2 |\n| 1.21.11 | 21 | 0.19.3+ | 0.141.4+1.21.11 |\n\n## 验证\n\n三个安装包均来自提交 f696586faf0a7e5117b688846da3badf3f2c01bd 的成功 CI 构建，并核验 JSON、版本声明、入口和 Mixin 类、字节码及 SHA-256。26.3 另完成了 Fabric/Knot 类转换检查。\n","artifacts":[{"id":11306342500,"name":"mod-jars","digest":"sha256:18bd5790a96dad5bb53dd0d7e4564e7467045c0f2903fda6db967067735a32d2"}]}''')
+          assert os.environ["GITHUB_REPOSITORY"] == config["repo"], "Unexpected repository"
+          repo = config["repo"]
+          
+          def gh(*args, binary=False):
+              result = subprocess.run(["gh", *args], capture_output=True, check=True)
+              return result.stdout if binary else result.stdout.decode()
+          
+          def api(endpoint, *args):
+              return json.loads(gh("api", f"repos/{repo}/{endpoint}", *args))
+          
+          def digest(data):
+              return "sha256:" + hashlib.sha256(data).hexdigest()
+          
+          run = api(f"actions/runs/{config['run']}")
+          assert run["status"] == "completed" and run["conclusion"] == "success", "Build was not successful"
+          assert run["head_sha"] == config["sha"], "Build commit does not match release commit"
+          assert run["repository"]["full_name"] == repo, "Build belongs to another repository"
+          
+          targets = {"1.21.11": 21, "26.2": 25, "26.3": 25}
+          expected = {}
+          for mc, java in targets.items():
+              version = config["version"] + (f"+mc{mc}" if config["id"] == "bowalert" else "")
+              name = f"{config['prefix']}-{mc}-{version}.jar"
+              expected[name] = {"mc": mc, "java": java, "version": version}
+          
+          out = Path("release-assets")
+          out.mkdir()
+          assets = {}
+          for source in config["artifacts"]:
+              artifact = api(f"actions/artifacts/{source['id']}")
+              assert artifact["name"] == source["name"] and not artifact["expired"], "Invalid artifact"
+              assert artifact["workflow_run"]["id"] == config["run"], "Artifact came from another build"
+              assert artifact["workflow_run"]["head_sha"] == config["sha"], "Artifact commit mismatch"
+              archive = gh("api", f"repos/{repo}/actions/artifacts/{source['id']}/zip", binary=True)
+              assert digest(archive) == source["digest"], "Artifact ZIP digest mismatch"
+              with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+                  for member in bundle.infolist():
+                      name = Path(member.filename).name
+                      if name not in expected:
+                          continue
+                      assert name not in assets, f"Duplicate installable JAR: {name}"
+                      data = bundle.read(member)
+                      target = expected[name]
+                      with zipfile.ZipFile(io.BytesIO(data)) as jar:
+                          names = set(jar.namelist())
+                          documents = {n: json.loads(jar.read(n)) for n in names if n.endswith(".json")}
+                          metadata = documents["fabric.mod.json"]
+                          assert metadata["id"] == config["id"] and metadata["environment"] == "client"
+                          assert metadata["version"] == target["version"]
+                          assert metadata["depends"]["minecraft"] == target["mc"]
+                          assert metadata["depends"]["java"] == f">={target['java']}"
+                          loader = ">=0.19.3" if config["id"] == "nohat" and target["mc"] != "26.3" else ">=0.19.5"
+                          assert metadata["depends"]["fabricloader"] == loader
+                          assert metadata["icon"] in names
+                          classes = [n.replace(".", "/") + ".class" for n in metadata["entrypoints"]["client"]]
+                          if config["id"] == "nohat":
+                              mixins = documents["nohat.mixins.json"]
+                              assert mixins["required"] and mixins["injectors"]["defaultRequire"] == 1
+                              classes += [mixins["package"].replace(".", "/") + "/" + n + ".class" for n in mixins["client"]]
+                          for name_in_jar in classes:
+                              bytecode = jar.read(name_in_jar)
+                              assert bytecode[:4] == b"\xca\xfe\xba\xbe"
+                              assert struct.unpack(">H", bytecode[6:8])[0] == target["java"] + 44
+                      (out / name).write_bytes(data)
+                      assets[name] = {"size": len(data), "digest": digest(data)}
+          assert set(assets) == set(expected), "Missing installable JAR"
+          checksums = "".join(f"{assets[n]['digest'].split(':')[1]}  {n}\n" for n in sorted(assets)).encode()
+          (out / "SHA256SUMS.txt").write_bytes(checksums)
+          assets["SHA256SUMS.txt"] = {"size": len(checksums), "digest": digest(checksums)}
+          print(json.dumps({"validated_artifacts": assets}, indent=2))
+          
+          tag = config["tag"]
+          releases = api("releases?per_page=100")
+          matches = [r for r in releases if r["tag_name"] == tag]
+          assert len(matches) <= 1, "Duplicate releases"
+          release = matches[0] if matches else None
+          
+          refs = api(f"git/matching-refs/tags/{tag}")
+          refs = [r for r in refs if r["ref"] == f"refs/tags/{tag}"]
+          assert len(refs) <= 1
+          if refs:
+              obj = refs[0]["object"]
+              for _ in range(5):
+                  if obj["type"] == "commit":
+                      break
+                  assert obj["type"] == "tag"
+                  obj = api(f"git/tags/{obj['sha']}")["object"]
+              assert obj["type"] == "commit" and obj["sha"] == config["sha"], "Existing tag points elsewhere"
+          else:
+              assert release is None, "Existing release has no matching tag"
+              api("git/refs", "--method", "POST", "-f", f"ref=refs/tags/{tag}", "-f", f"sha={config['sha']}")
+          
+          notes = Path("release-notes.md")
+          notes.write_text(config["notes"], encoding="utf-8")
+          if release is None:
+              gh("release", "create", tag, "--repo", repo, "--verify-tag", "--target", config["sha"],
+                 "--draft", "--title", config["title"], "--notes-file", str(notes))
+              release = next(r for r in api("releases?per_page=100") if r["tag_name"] == tag)
+          else:
+              assert release["name"] == config["title"] and release["body"].strip() == config["notes"].strip(), "Existing release differs"
+          
+          existing = {a["name"]: a for a in api(f"releases/{release['id']}/assets?per_page=100")}
+          assert set(existing) <= set(assets), "Unexpected release attachments"
+          missing = sorted(set(assets) - set(existing))
+          if missing:
+              assert release["draft"], "Published release is incomplete"
+              gh("release", "upload", tag, "--repo", repo, *[str(out / n) for n in missing])
+          
+          remote_assets = api(f"releases/{release['id']}/assets?per_page=100")
+          assert {a["name"] for a in remote_assets} == set(assets)
+          for asset in remote_assets:
+              expected_asset = assets[asset["name"]]
+              assert asset["state"] == "uploaded" and asset["size"] == expected_asset["size"]
+              downloaded = gh("api", "-H", "Accept: application/octet-stream",
+                              f"repos/{repo}/releases/assets/{asset['id']}", binary=True)
+              assert digest(downloaded) == expected_asset["digest"], f"Uploaded asset differs: {asset['name']}"
+          
+          if release["draft"]:
+              gh("release", "edit", tag, "--repo", repo, "--draft=false", "--latest")
+          published = api(f"releases/{release['id']}")
+          assert not published["draft"] and not published["prerelease"] and published["published_at"]
+          ref = api(f"git/ref/tags/{tag}")
+          assert ref["object"]["type"] == "commit" and ref["object"]["sha"] == config["sha"]
+          print(json.dumps({"published_release": published["html_url"], "tag": tag, "commit": config["sha"],
+                            "assets": [a["name"] for a in published["assets"]]}, indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(f"Published [{tag}]({published['html_url']}) from commit {config['sha']}.\n\n")
+              summary.write("Verified three installable JARs and SHA256SUMS.txt before publication.\n")
+          
